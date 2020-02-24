@@ -1,0 +1,15 @@
+
+#itg_spatial_app {
+    margin: 0 auto;
+    position: inherit;
+    background:#FFF
+    vertical-align: top;
+    width: 100%;
+    height: 100%; 
+    display: inline;
+    float: left;
+    padding: 10x;  
+}
+
+/* Pages –––––––––––––––––––––––––––––––––––––––––––––––––– */
+#Home {position: inherit}

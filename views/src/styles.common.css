@@ -1,0 +1,221 @@
+
+.itg-page {
+    padding-left: 4px;
+    padding-right: 4px;
+    margin-block-end: 2em;
+}
+.itg-container {
+    position: relative;
+    vertical-align: top;
+    box-sizing: border-box;
+    margin: 0 auto;
+    width: 100%;
+}
+.itg-container:after, .itg-row:after, .itg-page:after, .u-cf {
+    content: '';
+    display: table;
+    clear: both;
+}
+
+
+.itg-selector {
+    display: inline-block;
+}
+.itg-row {
+    position: relative;
+    display:inline-flex;
+    padding: 0 0px;
+    box-sizing: border-box;
+    margin: 0 auto;
+    width: 100%;
+    margin: 0px;
+}
+
+.itg-svg-container {
+    position: relative;
+    padding-right: 15px;
+    padding-left: 15px;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+}
+.itg-svg-content {
+    position: relative;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+/* Table Builder –––––––––––––––––––––––––––––––––––––––––––––––––– */
+.vega-bind-radio input {
+    font-size: 0.8em;
+}
+div.vega-bind {
+    height: auto;
+    border-radius: 2px;
+    margin: 2px;
+    padding: 2px 4px;
+    display: inline-block;
+    background-color: #F3EEE8;
+    padding: 2px 4px 2px 4px;
+    border: 1px solid #DEDBD1;
+    color: #363636;
+    text-align: left;
+    font-size: 10px;
+    font-weight: bold;    
+
+}
+.vega-embed {
+    background: #FFF;
+}
+
+input[type='range'] {
+    width:65px;
+}
+input[type='color'] {
+    height: auto;
+    border-width: 0px;
+}
+.vega-bind-name {
+    text-align: left;
+    font-weight: bold;
+    line-height: 1em;
+    display: block;
+    color: #333;
+    padding: 2px 4px;
+    cursor: context-menu;
+}
+div.vega-bind select {
+    -webkit-appearance: menulist;
+    -moz-appearance: menulist;
+    align-items: center;
+    white-space: pre;
+    -webkit-rtl-ordering: logical;
+    width: 80px;
+    text-align: center;
+    opacity: 1;
+    background-color: #9c4e4e;
+    border-radius: 3px;
+    color: #FFF;
+    cursor: context-menu;
+    margin: 0px 3px 1px 3px;
+    margin-top: 0px;
+    text-decoration: none;
+    font-size: 10px;
+}
+
+
+
+#vg-tooltip-element {
+    visibility: hidden;
+    padding: 8px;
+    position: fixed;
+    z-index: 1000;
+    font-family: sans-serif;
+    font-size: 9px;
+    border-radius: 3px;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 1px solid #d9d9d9;
+    color: black;
+}
+
+/* Loader –––––––––––––––––––––––––––––––––––––––––––––––––– */
+@-webkit-keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+}
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+/* Accordion –––––––––––––––––––––––––––––––––––––––––––––––––– */
+
+.accd {}
+.accd-header, .accd-body {
+    background: white;
+}
+.accd-body {
+    height: auto;
+    display: none;
+    height: auto;
+    margin-top: -9px;
+    margin-left: 1px;
+    margin-right: 1px;
+    margin-bottom:1px;
+    border: 1px solid #DEDBD1;
+}    
+.accd-header {
+cursor: pointer;
+}
+.accd-header:hover > h3 {
+    text-decoration: underline;
+}
+.accd__item.active:last-child {
+    border-radius: 0;
+}
+.accd:first-child>.accd__item>.accd-header {
+    border-bottom: 1px solid transparent;
+}
+.accd__item>.accd-header > h3:after {
+    float:right;    
+    content: 'More>>>';
+    font-size:0.8em;
+    color: #ad1300;
+    font-style: italic;
+    position: relative;
+    top: 0px;
+}
+.accd__item.active>.accd-header>h3:after {
+    content: '<<<Less';
+    font-size:0.8em;
+    color: #ad1300;
+    font-style: italic;
+    position: relative;    
+}
+
+.accd__item .accd__item .accd-header {
+    float:right;
+    font-size:0.8em;
+    color: #ad1300;
+    font-style: italic;
+    position: relative;
+    top: 0px;
+}
+.accd__item .accd__item.active .accd-header > h4:after {
+    float:right;    
+    content: '<<<Less';
+    font-size:0.8em;
+    color: #ad1300;
+    font-style: italic;
+    position: relative;
+    top: 0px;
+}
+
+
+.accd__item .accd__item .accd-header {
+    
+    padding-right: 25px;
+    color: #333;
+}
+.accd__item .accd__item .accd-body {
+    height: auto;
+    display: none;
+    height: auto;
+    margin-top: -9px;
+    margin-left: 1px;
+    margin-right: 1px;
+    margin-bottom:1px;
+    border: 1px solid #DEDBD1;
+}
+
+
+

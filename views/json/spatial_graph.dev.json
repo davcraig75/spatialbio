@@ -1,0 +1,897 @@
+{
+    "$schema": "https://vega.github.io/schema/vega/v5.json",
+    "autosize": "pad",
+    "resize": true,
+    "padding": 5,
+    "width": 650,
+    "height": 650,
+    "data": [
+        { "name": "PAN_store" },
+        { "name": "SELECT_store" },
+        {
+            "name": "selectedFilter",
+            "on": [
+                { "trigger": "Clear_Filter", "remove": true },
+                { "trigger": "clickedFilter", "toggle": "clickedFilter" }
+            ]
+        },
+        { "name": "mydata", "url": { "signal": "dataurl" } },
+        {
+            "name": "tdata",
+            "source": "mydata",
+            "transform": [
+                { "type": "formula", "as": "My_X_Value", "expr": "datum[X_Axis]" },
+                { "type": "formula", "as": "My_C_Value", "expr": "datum[Color_by]" },
+                { "type": "formula", "as": "My_Y_Value", "expr": "datum[Y_Axis]" },
+                { "type": "formula", "as": "My_C_Value", "expr": "datum[Color_by]" },
+                {
+                    "type": "filter",
+                    "expr": "!indata('selectedFilter', 'value', datum['txCluster'])"
+                }
+            ]
+        },
+        {
+            "name": "contours_data",
+            "source": "tdata",
+            "transform": [
+                { "type": "filter", "expr": "Plot_Contours" },
+                {
+                    "type": "contour",
+                    "x": { "expr": "scale('x', datum['My_X_Value'])" },
+                    "y": { "expr": "scale('y', datum['My_Y_Value'])" },
+                    "weight": "My_C_Value",
+                    "bandwidth": { "signal": "Contour_Band" },
+                    "size": [{ "signal": "image_width" }, { "signal": "image_height" }],
+                    "count": { "signal": "Contour_Count" }
+                }
+            ]
+        },
+        {
+            "source": "tdata",
+            "name": "histo_data",
+            "transform": [{
+                    "type": "filter",
+                    "expr": "if(datum['My_X_Value']>SELECT_x[0]&datum['My_X_Value']<SELECT_x[1],true,false)"
+                },
+                {
+                    "type": "filter",
+                    "expr": "if(datum['My_Y_Value']>SELECT_y[0]&datum['My_Y_Value']<SELECT_y[1],true,false)"
+                }
+            ]
+        },
+        {
+            "name": "my_filtered_data",
+            "source": "histo_data",
+            "transform": [
+                { "type": "extent", "field": { "field": "My_X_Value" }, "signal": "hxext" },
+                { "type": "extent", "field": "My_Y_Value", "signal": "hY_MaxMin" },
+                {
+                    "type": "bin",
+                    "field": { "signal": "X_Axis" },
+                    "extent": { "signal": "hxext" },
+                    "nice": false,
+                    "maxbins": { "signal": "Histogram_Bins_Size" }
+                }
+            ]
+        },
+        {
+            "name": "histcounts_data",
+            "source": "my_filtered_data",
+            "transform": [
+                { "type": "aggregate", "groupby": ["bin0", "bin1", "My_C_Value"] }
+            ]
+        },
+        {
+            "name": "histstackmarks_data",
+            "source": "histcounts_data",
+            "transform": [{
+                "type": "stack",
+                "offset": "zero",
+                "groupby": ["bin0"],
+                "sort": { "field": "My_C_Value" },
+                "field": "My_C_Value"
+            }]
+        }
+    ],
+    "signals": [{
+            "name": "site_url",
+            "value": "https://spatial.bio"
+        },
+        {
+            "name": "Clear_Filter",
+            "value": true,
+            "on": [
+                { "events": "mouseup[!event.item]", "update": "true", "force": true }
+            ]
+        },
+        {
+            "name": "shiftFilter",
+            "value": false,
+            "on": [{
+                "events": "@filterLegend:click, @filterLegendlab:click,@filterLegend2:click, @filterLegendlab2:click",
+                "update": "event.shiftKey",
+                "force": true
+            }]
+        },
+        {
+            "name": "clickedFilter",
+            "value": null,
+            "on": [{
+                "events": "@filterLegend:click, @filterLegendlab:click,@filterLegend2:click, @filterLegendlab2:click",
+                "update": "{value: datum.value}",
+                "force": true
+            }]
+        },
+        {
+            "name": "image_height",
+            "value": 600,
+            "bind": { "input": "range", "min": 400, "max": 700, "step": 1 }
+        },
+        {
+            "name": "filter_out",
+            "value": "None",
+            "bind": {
+                "input": "select",
+                "options": ["None", "1", "2", "3", "4", "5", "6"]
+            }
+        },
+        { "name": "Invert_Gradient", "value": false, "bind": { "input": "checkbox" } },
+        {
+            "name": "Contour_Count",
+            "value": 8,
+            "bind": { "input": "range", "min": 1, "max": 100, "step": 1 }
+        },
+        {
+            "name": "image_width",
+            "value": 540,
+            "bind": { "input": "range", "min": 400, "max": 700, "step": 1 }
+        },
+        {
+            "name": "spot_size",
+            "value": 20,
+            "bind": { "input": "range", "min": 5, "max": 300, "step": 5 }
+        },
+        { "name": "height", "update": "image_height+hist_graph_height" },
+        {
+            "name": "Sample",
+            "value": "144520"
+        },
+        {
+            "name": "shape",
+            "value": "circle",
+            "bind": {
+                "input": "select",
+                "options": [
+                    "square",
+                    "circle",
+                    "cross",
+                    "diamond",
+                    "triangle",
+                    "triangle-up",
+                    "triangle-down",
+                    "triangle-right",
+                    "triangle-left"
+                ]
+            }
+        },
+        { "name": "Gene", "value": "Prkca", "bind": { "input": "text" } },
+        { "name": "show_hist_graph", "update": "if(SELECT_My_X_Value,true,false)" },
+        { "name": "hist_graph_height", "update": "if(show_hist_graph,200,0)" },
+        { "name": "Show_Points", "value": true, "bind": { "input": "checkbox" } },
+        { "name": "Plot_Contours", "value": true, "bind": { "input": "checkbox" } },
+        {
+            "name": "imageurl",
+            "update": "if(Sample != 'None',site_url+'/api/public/'+Sample+'-spatial/tissue_lowres_image.png','')"
+        },
+        {
+            "name": "dataurl",
+            "update": "site_url+'/api/sample/'+Sample+'/gene/'+Gene+'/file.json'"
+        },
+        {
+            "name": "X_Axis",
+            "value": "imagecol",
+            "bind": { "input": "select", "options": ["imagecol", "tsneX", "umapX"] }
+        },
+        {
+            "name": "Y_Axis",
+            "value": "imagerow",
+            "bind": { "input": "select", "options": ["imagerow", "tsneY", "umapY"] }
+        },
+        {
+            "name": "Color_by",
+            "value": "seuratCluster",
+            "bind": {
+                "input": "select",
+                "options": [
+                    "seuratCluster",
+                    "txCluster",
+                    "umiCount",
+                    "chemoresponseScore",
+                    "yoshiharaEstimateStromal",
+                    "yoshiharaEstimateImmune",
+                    "yoshiharaOvCa126",
+                    "matondoChemoresponse"
+                ]
+            }
+        },
+        {
+            "name": "Filter_by",
+            "value": "txCluster",
+            "bind": {
+                "input": "select",
+                "options": [
+                    "txCluster",
+                    "umiCount",
+                    "chemoresponseScore",
+                    "yoshiharaEstimateStromal",
+                    "yoshiharaEstimateImmune",
+                    "yoshiharaOvCa126",
+                    "matondoChemoresponse"
+                ]
+            }
+        },
+        {
+            "name": "Contour_Band",
+            "value": 5,
+            "bind": { "input": "range", "min": 0, "max": 20, "step": 1 }
+        },
+        {
+            "name": "opacity_image",
+            "value": 0.3,
+            "bind": { "input": "range", "min": 0, "max": 1, "step": 0.01 }
+        },
+        {
+            "name": "opacity_grid",
+            "value": 0.5,
+            "bind": { "input": "range", "min": 0, "max": 1, "step": 0.01 }
+        },
+        {
+            "name": "opacity_points",
+            "value": 1,
+            "bind": { "input": "range", "min": 0, "max": 1, "step": 0.01 }
+        },
+        {
+            "name": "opacity_contours",
+            "value": 0,
+            "bind": { "input": "range", "min": 0, "max": 1, "step": 0.01 }
+        },
+        { "name": "calc", "update": "'init'" },
+        { "name": "margin", "value": 10 },
+        {
+            "name": "Palette",
+            "value": "Magma",
+            "bind": {
+                "input": "select",
+                "options": [
+                    "Viridis",
+                    "Magma",
+                    "Inferno",
+                    "Plasma",
+                    "Blues",
+                    "Greens",
+                    "Greys",
+                    "warmgreys",
+                    "lightgreyteal",
+                    "Purples",
+                    "Reds",
+                    "Oranges",
+                    "BlueOrange",
+                    "BrownBlueGreen",
+                    "PurpleGreen",
+                    "PinkYellowGreen",
+                    "PurpleOrange",
+                    "RedBlue",
+                    "RedGrey",
+                    "RedYellowBlue",
+                    "RedYellowGreen",
+                    "BlueGreen",
+                    "BluePurple",
+                    "GreenBlue",
+                    "OrangeRed",
+                    "PurpleBlueGreen",
+                    "PurpleBlue",
+                    "PurpleRed",
+                    "RedPurple",
+                    "YellowGreenBlue",
+                    "YellowGreen",
+                    "YellowOrangeBrown",
+                    "YellowOrangeRed",
+                    "tableau20"
+                ]
+            }
+        },
+        {
+            "name": "unit",
+            "value": {},
+            "on": [
+                { "events": "mousemove", "update": "isTuple(group()) ? group() : unit" }
+            ]
+        },
+        { "name": "PAN", "update": "vlSelectionResolve('PAN_store')" },
+        { "name": "SELECT", "update": "vlSelectionResolve('SELECT_store', 'union')" },
+        {
+            "name": "PAN_My_X_Value",
+            "on": [{
+                    "events": { "signal": "PAN_translate_delta" },
+                    "update": "panLinear(PAN_translate_anchor.extent_x, -PAN_translate_delta.x / image_width)"
+                },
+                {
+                    "events": { "signal": "PAN_zoom_delta" },
+                    "update": "zoomLinear(domain('x'), PAN_zoom_anchor.x, PAN_zoom_delta)"
+                },
+                { "events": [{ "source": "scope", "type": "dblclick" }], "update": "null" }
+            ]
+        },
+        { "name": "Histogram_Bins_Size", "value": 25 },
+        {
+            "name": "PAN_My_Y_Value",
+            "on": [{
+                    "events": { "signal": "PAN_translate_delta" },
+                    "update": "panLinear(PAN_translate_anchor.extent_y, -PAN_translate_delta.y / image_height)"
+                },
+                {
+                    "events": { "signal": "PAN_zoom_delta" },
+                    "update": "zoomLinear(domain('y'), PAN_zoom_anchor.y, PAN_zoom_delta)"
+                },
+                { "events": [{ "source": "scope", "type": "dblclick" }], "update": "null" }
+            ]
+        },
+        {
+            "name": "PAN_tuple",
+            "on": [{
+                "events": [{ "signal": "PAN_My_X_Value || PAN_My_Y_Value" }],
+                "update": "PAN_My_X_Value && PAN_My_Y_Value ? {unit: '', fields: PAN_tuple_fields, values: [PAN_My_X_Value,PAN_My_Y_Value]} : null"
+            }]
+        },
+        {
+            "name": "PAN_tuple_fields",
+            "value": [
+                { "field": "My_X_Value", "channel": "x", "type": "R" },
+                { "field": "My_Y_Value", "channel": "y", "type": "R" }
+            ]
+        },
+        {
+            "name": "PAN_translate_anchor",
+            "value": {},
+            "on": [{
+                "events": [{
+                    "source": "scope",
+                    "type": "mousedown",
+                    "filter": ["!event.shiftKey"]
+                }],
+                "update": "{x: x(unit), y: y(unit), extent_x: domain('x'), extent_y: domain('y')}"
+            }]
+        },
+        {
+            "name": "PAN_translate_delta",
+            "value": {},
+            "on": [{
+                "events": [{
+                    "source": "window",
+                    "type": "mousemove",
+                    "consume": true,
+                    "between": [{
+                            "source": "scope",
+                            "type": "mousedown",
+                            "filter": ["!event.shiftKey"]
+                        },
+                        { "source": "window", "type": "mouseup" }
+                    ]
+                }],
+                "update": "{x: PAN_translate_anchor.x - x(unit), y: PAN_translate_anchor.y - y(unit)}"
+            }]
+        },
+        {
+            "name": "PAN_zoom_anchor",
+            "on": [{
+                "events": [{
+                    "source": "scope",
+                    "type": "wheel",
+                    "consume": true,
+                    "filter": ["!event.shiftKey"]
+                }],
+                "update": "{x: invert('x', x(unit)), y: invert('y', y(unit))}"
+            }]
+        },
+        {
+            "name": "PAN_zoom_delta",
+            "on": [{
+                "events": [{
+                    "source": "scope",
+                    "type": "wheel",
+                    "consume": true,
+                    "filter": ["!event.shiftKey"]
+                }],
+                "force": true,
+                "update": "pow(1.001, event.deltaY * pow(16, event.deltaMode))"
+            }]
+        },
+        { "name": "PAN_modify", "update": "modify('PAN_store', PAN_tuple, true)" },
+        {
+            "name": "SELECT_x",
+            "value": [],
+            "on": [{
+                    "events": {
+                        "source": "scope",
+                        "type": "mousedown",
+                        "filter": [
+                            "event.shiftKey",
+                            "!event.item || event.item.mark.name !== 'SELECT_brush'"
+                        ]
+                    },
+                    "update": "[x(unit), x(unit)]"
+                },
+                {
+                    "events": {
+                        "source": "window",
+                        "type": "mousemove",
+                        "consume": true,
+                        "between": [{
+                                "source": "scope",
+                                "type": "mousedown",
+                                "filter": [
+                                    "event.shiftKey",
+                                    "!event.item || event.item.mark.name !== 'SELECT_brush'"
+                                ]
+                            },
+                            { "source": "window", "type": "mouseup" }
+                        ]
+                    },
+                    "update": "[SELECT_x[0], clamp(x(unit), 0, image_width)]"
+                },
+                {
+                    "events": { "signal": "SELECT_scale_trigger" },
+                    "update": "[scale('x', SELECT_My_X_Value[0]), scale('x', SELECT_My_X_Value[1])]"
+                },
+                {
+                    "events": { "signal": "SELECT_translate_delta" },
+                    "update": "clampRange(panLinear(SELECT_translate_anchor.extent_x, SELECT_translate_delta.x / span(SELECT_translate_anchor.extent_x)), 0, image_width)"
+                },
+                {
+                    "events": { "signal": "SELECT_zoom_delta" },
+                    "update": "clampRange(zoomLinear(SELECT_x, SELECT_zoom_anchor.x, SELECT_zoom_delta), 0, image_width)"
+                },
+                {
+                    "events": [{ "source": "scope", "type": "dblclick" }],
+                    "update": "[0, 0]"
+                }
+            ]
+        },
+        {
+            "name": "SELECT_My_X_Value",
+            "on": [{
+                "events": { "signal": "SELECT_x" },
+                "update": "SELECT_x[0] === SELECT_x[1] ? null : invert('x', SELECT_x)"
+            }]
+        },
+        {
+            "name": "SELECT_y",
+            "value": [],
+            "on": [{
+                    "events": {
+                        "source": "scope",
+                        "type": "mousedown",
+                        "filter": [
+                            "event.shiftKey",
+                            "!event.item || event.item.mark.name !== 'SELECT_brush'"
+                        ]
+                    },
+                    "update": "[y(unit), y(unit)]"
+                },
+                {
+                    "events": {
+                        "source": "window",
+                        "type": "mousemove",
+                        "consume": true,
+                        "between": [{
+                                "source": "scope",
+                                "type": "mousedown",
+                                "filter": [
+                                    "event.shiftKey",
+                                    "!event.item || event.item.mark.name !== 'SELECT_brush'"
+                                ]
+                            },
+                            { "source": "window", "type": "mouseup" }
+                        ]
+                    },
+                    "update": "[SELECT_y[0], clamp(y(unit), 0, image_height)]"
+                },
+                {
+                    "events": { "signal": "SELECT_scale_trigger" },
+                    "update": "[scale('y', SELECT_My_Y_Value[0]), scale('y', SELECT_My_Y_Value[1])]"
+                },
+                {
+                    "events": { "signal": "SELECT_translate_delta" },
+                    "update": "clampRange(panLinear(SELECT_translate_anchor.extent_y, SELECT_translate_delta.y / span(SELECT_translate_anchor.extent_y)), 0, image_height)"
+                },
+                {
+                    "events": { "signal": "SELECT_zoom_delta" },
+                    "update": "clampRange(zoomLinear(SELECT_y, SELECT_zoom_anchor.y, SELECT_zoom_delta), 0, image_height)"
+                },
+                {
+                    "events": [{ "source": "scope", "type": "dblclick" }],
+                    "update": "[0, 0]"
+                }
+            ]
+        },
+        {
+            "name": "SELECT_My_Y_Value",
+            "on": [{
+                "events": { "signal": "SELECT_y" },
+                "update": "SELECT_y[0] === SELECT_y[1] ? null : invert('y', SELECT_y)"
+            }]
+        },
+        {
+            "name": "SELECT_scale_trigger",
+            "value": {},
+            "on": [{
+                "events": [{ "scale": "x" }, { "scale": "y" }],
+                "update": "(!isArray(SELECT_My_X_Value) || (+invert('x', SELECT_x)[0] === +SELECT_My_X_Value[0] && +invert('x', SELECT_x)[1] === +SELECT_My_X_Value[1])) && (!isArray(SELECT_My_Y_Value) || (+invert('y', SELECT_y)[0] === +SELECT_My_Y_Value[0] && +invert('y', SELECT_y)[1] === +SELECT_My_Y_Value[1])) ? SELECT_scale_trigger : {}"
+            }]
+        },
+        {
+            "name": "SELECT_translate_anchor",
+            "value": {},
+            "on": [{
+                "events": [{
+                    "source": "scope",
+                    "type": "mousedown",
+                    "filter": ["event.shiftKey"],
+                    "markname": "SELECT_brush"
+                }],
+                "update": "{x: x(unit), y: y(unit), extent_x: slice(SELECT_x), extent_y: slice(SELECT_y)}"
+            }]
+        },
+        {
+            "name": "SELECT_translate_delta",
+            "value": {},
+            "on": [{
+                "events": [{
+                    "source": "window",
+                    "type": "mousemove",
+                    "consume": true,
+                    "between": [{
+                            "source": "scope",
+                            "type": "mousedown",
+                            "filter": ["event.shiftKey"],
+                            "markname": "SELECT_brush"
+                        },
+                        { "source": "window", "type": "mouseup" }
+                    ]
+                }],
+                "update": "{x: SELECT_translate_anchor.x - x(unit), y: SELECT_translate_anchor.y - y(unit)}"
+            }]
+        },
+        {
+            "name": "SELECT_zoom_anchor",
+            "on": [{
+                "events": [{
+                    "source": "scope",
+                    "type": "wheel",
+                    "consume": true,
+                    "filter": ["event.shiftKey"],
+                    "markname": "SELECT_brush"
+                }],
+                "update": "{x: x(unit), y: y(unit)}"
+            }]
+        },
+        {
+            "name": "SELECT_zoom_delta",
+            "on": [{
+                "events": [{
+                    "source": "scope",
+                    "type": "wheel",
+                    "consume": true,
+                    "filter": ["event.shiftKey"],
+                    "markname": "SELECT_brush"
+                }],
+                "force": true,
+                "update": "pow(1.001, event.deltaY * pow(16, event.deltaMode))"
+            }]
+        }
+    ],
+    "layout": {
+        "padding": { "column": 75, "row": 25 },
+        "center": { "row": true, "column": true },
+        "columns": 1,
+        "bounds": "flush",
+        "align": "each"
+    },
+    "marks": [{
+            "type": "group",
+            "role": "cell",
+            "clip": true,
+            "encode": {
+                "update": {
+                    "width": { "signal": "image_width" },
+                    "height": { "signal": "image_height" },
+                    "stroke": { "value": "transparent" }
+                }
+            },
+            "axes": [],
+            "marks": [
+
+                {
+                    "type": "path",
+                    "clip": false,
+                    "interactive": true,
+                    "name": "mypath",
+                    "from": { "data": "contours_data" },
+                    "encode": {
+                        "update": {
+                            "stroke": { "signal": "if(Plot_Contours,'white','transparent')" },
+                            "strokeWidth": { "value": 0.3 },
+                            "strokeOpacity": {
+                                "signal": "if(Plot_Contours,opacity_contours,0)"
+                            },
+                            "fill": { "scale": "colorcatscale_contour", "field": "value" },
+                            "fillOpacity": { "signal": "if(Plot_Contours,opacity_contours,0)" }
+                        }
+                    },
+                    "transform": [{ "type": "geopath", "field": "datum" }]
+                },
+                {
+                    "name": "SELECT_brush_bg",
+                    "type": "rect",
+                    "clip": true,
+                    "encode": {
+                        "enter": {
+                            "fill": { "value": "#333" },
+                            "fillOpacity": { "value": 0.125 }
+                        },
+                        "update": {
+                            "x": { "signal": "SELECT_x[0]" },
+                            "y": { "signal": "SELECT_y[0]" },
+                            "x2": { "signal": "SELECT_x[1]" },
+                            "y2": { "signal": "SELECT_y[1]" }
+                        }
+                    }
+                },
+                {
+                    "type": "image",
+                    "clip": true,
+                    "name": "test",
+                    "encode": {
+                        "enter": {},
+                        "update": {
+                            "url": { "signal": "imageurl" },
+                            "baseline": { "value": "top" },
+                            "opacity": { "signal": "opacity_image" },
+                            "aspect": { "signal": false },
+                            "x": { "signal": "0", "scale": "x" },
+                            "x2": { "signal": "image_width", "scale": "x" },
+                            "y": { "value": "0", "scale": "y" },
+                            "y2": { "signal": "image_height", "scale": "y" }
+                        }
+                    }
+                },
+                {
+                    "name": "SELECT_brush",
+                    "type": "rect",
+                    "clip": true,
+                    "encode": {
+                        "enter": { "fill": { "value": "transparent" } },
+                        "update": {
+                            "x": { "signal": "SELECT_x[0]" },
+                            "y": { "signal": "SELECT_y[0]" },
+                            "x2": { "signal": "SELECT_x[1]" },
+                            "y2": { "signal": "SELECT_y[1]" },
+                            "stroke": [{
+                                    "test": "SELECT_x[0] !== SELECT_x[1] && SELECT_y[0] !== SELECT_y[1]",
+                                    "value": "white"
+                                },
+                                { "value": null }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "marks",
+                    "type": "symbol",
+                    "clip": true,
+                    "style": ["point"],
+                    "from": { "data": "tdata" },
+                    "encode": {
+                        "update": {
+                            "shape": { "signal": "shape" },
+                            "x": { "scale": "x", "field": "My_X_Value" },
+                            "y": { "scale": "y", "field": "My_Y_Value" },
+                            "size": { "signal": "spot_size" },
+                            "tooltip": { "signal": "datum" },
+                            "strokeWidth": { "value": 0 },
+                            "fill": { "scale": "colorcontin_scale", "field": "My_C_Value" },
+                            "tooltips": "datum",
+                            "zindex": { "value": 1 },
+                            "fillOpacity": [
+                                { "test": "Show_Points", "signal": "opacity_points" },
+                                { "value": 0 }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "group",
+            "role": "cell",
+            "clip": true,
+            "encode": {
+                "update": {
+                    "width": { "signal": "image_width" },
+                    "height": { "signal": "hist_graph_height+100" },
+                    "stroke": { "value": "aliceblue" }
+                }
+            },
+            "marks": [{
+                "type": "group",
+                "name": "histogram_graph",
+                "style": "cell",
+                "clip": false,
+                "interactive": true,
+                "encode": {
+                    "update": {
+                        "width": { "signal": "if(show_hist_graph,image_width,0)" },
+                        "height": { "signal": "hist_graph_height" },
+                        "stroke": { "signal": "'transparent'" },
+                        "strokeWidth": { "signal": "0" }
+                    }
+                },
+                "axes": [{
+                    "scale": "hist_graph_scale",
+                    "orient": "left",
+                    "title": { "signal": "if(show_hist_graph,Y_Axis,'')" },
+                    "tickCount": 5,
+                    "gridScale": "x",
+                    "grid": true,
+                    "labels": true,
+                    "ticks": true,
+                    "gridOpacity": { "signal": "if(show_hist_graph,1,0)" },
+                    "labelOpacity": { "signal": "if(show_hist_graph,1,0)" },
+                    "tickOpacity": { "signal": "if(show_hist_graph,1,0)" }
+                }],
+                "scales": [{
+                    "name": "hist_graph_scale",
+                    "type": "linear",
+                    "range": [{ "signal": "hist_graph_height" }, 25],
+                    "domain": { "data": "histstackmarks_data", "fields": ["y0", "y1"] }
+                }],
+                "marks": [{
+                    "type": "rect",
+                    "name": "histo",
+                    "clip": false,
+                    "from": { "data": "histstackmarks_data" },
+                    "interactive": true,
+                    "encode": {
+                        "update": {
+                            "y": { "scale": "hist_graph_scale", "field": "y0" },
+                            "y2": { "scale": "hist_graph_scale", "field": "y1" },
+                            "x": { "scale": "x", "field": "bin0" },
+                            "tooltip": { "signal": "datum" },
+                            "x2": { "scale": "x", "field": "bin1" },
+                            "stroke": { "value": "aliceblue" },
+                            "strokeWidth": { "value": 0.5 },
+                            "fillOpacity": { "signal": "0.7" },
+                            "fill": { "scale": "colorcontin_scale", "field": "My_C_Value" }
+                        }
+                    }
+                }]
+            }]
+        }
+    ],
+    "scales": [{
+            "name": "x",
+            "type": "linear",
+            "domain": [0, { "signal": "image_width" }],
+            "domainRaw": { "signal": "PAN['My_X_Value']" },
+            "range": [0, { "signal": "image_width" }]
+        },
+        {
+            "name": "y",
+            "type": "linear",
+            "domain": [0, { "signal": "image_height" }],
+            "domainRaw": { "signal": "PAN['My_Y_Value']" },
+            "range": [0, { "signal": "image_height" }]
+        },
+        {
+            "name": "filter_scale",
+            "type": "ordinal",
+            "range": { "scheme": { "signal": "'tableau20'" }, "count": 20 },
+            "domain": { "data": "mydata", "field": { "signal": "Filter_by" } }
+        },
+        {
+            "name": "colorcontin_scale",
+            "type": "quantile",
+            "range": { "scheme": { "signal": "Palette" }, "count": 20 },
+            "reverse": { "signal": "Invert_Gradient" },
+            "domain": { "data": "tdata", "field": "My_C_Value" }
+        },
+        {
+            "name": "colorcat_scale",
+            "type": "sequential",
+            "zero": true,
+            "range": { "scheme": { "signal": "Palette" } },
+            "reverse": { "signal": "Invert_Gradient" },
+            "domain": { "data": "tdata", "field": "My_C_Value" }
+        },
+        {
+            "name": "colorcatscale_contour",
+            "type": "sequential",
+            "zero": true,
+            "domain": { "data": "contours_data", "field": "value" },
+            "range": { "scheme": { "signal": "Palette" } },
+            "reverse": { "signal": "Invert_Gradient" }
+        }
+    ],
+    "axes": [{
+            "scale": "y",
+            "orient": "left",
+            "gridScale": "x",
+            "grid": true,
+            "gridOpacity": { "signal": "opacity_grid" },
+            "labels": false,
+            "labelOverlap": true,
+            "tickCount": { "signal": "ceil(image_height/40)" },
+            "zindex": 0
+        },
+        {
+            "scale": "x",
+            "orient": "bottom",
+            "grid": true,
+            "gridOpacity": { "signal": "opacity_grid" },
+            "labels": false,
+            "gridScale": "y",
+            "labelFlush": true,
+            "labelOverlap": true,
+            "domain": true,
+            "tickCount": { "signal": "ceil(image_width/40)" },
+            "zindex": 0
+        }
+    ],
+    "legends": [{
+            "fill": "colorcat_scale",
+            "title": { "signal": "'Gradient '+Color_by" },
+            "type": "gradient",
+            "gradientThickness": 24
+        },
+        {
+            "fill": "filter_scale",
+            "type": "symbol",
+            "title": { "signal": "'Filter_by '+Filter_by" },
+            "encode": {
+                "symbols": {
+                    "name": "filterLegend",
+                    "interactive": true,
+                    "update": {
+                        "strokeWidth": { "value": 0 },
+                        "opacity": [{
+                                "test": "indata('selectedFilter', 'value', datum.value)",
+                                "value": 0.15
+                            },
+                            { "value": 0.75 }
+                        ],
+                        "size": { "value": 64 }
+                    }
+                },
+                "labels": {
+                    "name": "filterLegendlab",
+                    "values": { "signal": "Filter_Out_From=='None' ? [] : 0" },
+                    "interactive": true,
+                    "update": {
+                        "opacity": [{
+                                "test": "indata('selectedFilter', 'value', datum.value)",
+                                "value": 0.15
+                            },
+                            { "value": 0.75 }
+                        ]
+                    }
+                }
+            },
+            "orient": "right",
+            "padding": 5,
+            "cornerRadius": 4,
+            "fillColor": "#fff",
+            "strokeColor": "#ccc"
+        }
+    ],
+    "config": {}
+}

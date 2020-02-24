@@ -1,0 +1,39 @@
+var app="itg_spatial_app";
+<%-  include src/jquery-3.3.1.min.js  %>
+<%-  include src/vega.5.5.min.js  %>
+
+
+var server = jQuery( "#"+app );
+var global_api=jQuery('script').last().attr("api");
+if (typeof global_api === "undefined" ) {
+   global_api = '/api';
+}
+<%-  include src/lz-string.js  %>
+/////////////////////////////
+// Core functions
+/////////////////////////////
+	var findMyIndex = function findMyIndex(items, name) {var index = -1;for (var i = 0; i < items.length; ++i) {if (items[i].name == name) {index = i;break;}}return index;};
+
+	var setWidth = function setWidth(id) {var w = jQuery('#master').width();
+	  if (w>800){w=800};return w}
+
+	var setHeight = function setHeight(id) {var val = setWidth()*0.5;if (val > 600) {val = 600};return val};
+
+/////////////////////////////
+// Styles
+/////////////////////////////
+server.append(jQuery.parseHTML( "<style type='text/css'>"+itg_decomp("<%-css%>")+"</style> "));
+server.append(jQuery.parseHTML( "<style type='text/css'>"+itg_decomp("<%-spatial_css%>")+"</style> "));
+server.append(jQuery.parseHTML( "<div class='itg itg-page'>"+itg_decomp("<%-spatial%>")+"</div> "));
+
+/////////////////////////////
+// App
+/////////////////////////////
+
+jQuery(document).ready(function() {
+	try {   
+		<%-  include spatial.js  %>
+	} catch(err) {
+		console.log(err);
+	}
+});
