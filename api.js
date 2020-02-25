@@ -34,7 +34,7 @@ app.set('port', port);
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/api/public', express.static(path.join(__dirname, 'public')));
+app.use(process.env.API_PATH + '/public', express.static(path.join(__dirname, 'public')));
 app.use(morgan('dev')); // log every request to the console
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -99,26 +99,42 @@ function find_GeneSample(req, res) {
     var gene = req.params.gene;
     var sample = req.params.sample;
     GeneSample.find({ "sample": parseInt(sample), "gene": gene }, function(err, result) {
-        if (err) { console.log("error");
-            res.json({}) }
+        if (err) {
+            console.log("error");
+            res.json({})
+        }
         if (result) {
             res.json(result);
         }
     });
 };
-app.get(process.env.HREF + '/sample/:sample/gene/:gene/file.json', find_GeneSample);
-app.get(process.env.HREF + '/gene/:gene/sample/:sample/file.json', find_GeneSample);
+app.get(process.env.API_PATH + '/sample/:sample/gene/:gene/file.json', find_GeneSample);
+app.get(process.env.API_PATH + '/gene/:gene/sample/:sample/file.json', find_GeneSample);
 //////////////////////////////////////////////////////////////////////////////////
 // END API  Server
 //////////////////////////////////////////////////////////////////////////////////
-
+/////////////////////////////////////////////////////////////////////////////////
+// Webpage From Node
+//////////////////////////////////////////////////////////////////////////////////
+var app_components = {
+    global_api: process.env.HREF,
+    port: port,
+    spatial: compress.file("views/spatial.ejs"),
+    spatial_graph: compress.file("views/json/spatial_graph." + status + ".json"),
+    css: compress.file("views/src/styles.common.css"),
+    jqueryui: compress.file("views/src/jquery-ui.css"),
+    spatial_css: compress.file("views/src/styles.spatial.css")
+};
+app.get(process.env.API_PATH, function(req, res) {
+    res.render('body.ejs', app_components);
+});
 
 //////////////////////////////////////////////////////////////////////////////////
 // Create Javascript Package
 //////////////////////////////////////////////////////////////////////////////////
-app.get(process.env.PATH + '/spatial_bio.js', function(req, res) {
+app.get(process.env.API_PATH + '/compile', function(req, res) {
     res.render('wrapper.ejs', app_components, function(err, script) {
-        fs.writeFile('public/spatial_bio.js', script, function(err) {
+        fs.writeFile('spatial_bio.js', script, function(err) {
             if (err)
                 console.error(err);
             fs.close(script, function() {
@@ -132,21 +148,7 @@ app.get(process.env.PATH + '/spatial_bio.js', function(req, res) {
 // END Create Javascript Package
 //////////////////////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////////////////////////////////////
-// Webpage From Node
-//////////////////////////////////////////////////////////////////////////////////
-var app_components = {
-    global_api: process.env.HREF,
-    port: port,
-    spatial: compress.file("views/spatial.ejs"),
-    spatial_graph: compress.file("views/json/spatial_graph." + status + ".json"),
-    css: compress.file("views/src/styles.common.css"),
-    jqueryui: compress.file("views/src/jquery-ui.css"),
-    spatial_css: compress.file("views/src/styles.spatial.css")
-};
-app.get(process.env.HREF, function(req, res) {
-    res.render('body.ejs', app_components);
-});
+
 
 
 
